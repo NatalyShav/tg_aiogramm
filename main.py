@@ -3,11 +3,31 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 
-from tg_aiogramm.config import TOKEN
+from config import TOKEN,API_KEY
 import random
+import aiohttp
+
+# Вставьте сюда ваш API-ключ OpenWeatherMap
+api_key = 'API_KEY'
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+
+@dp.message(Command('weather'))
+async def weather(message: Message):
+    city = 'Moscow'
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric&lang=ru"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status == 200:
+                data = await resp.json()
+                temp = data['main']['temp']
+                description = data['weather'][0]['description']
+                reply = f"Погода в Москве:\nТемпература: {temp}°C\nОписание: {description.capitalize()}"
+                await message.answer(reply)
+            else:
+                await message.answer("Не удалось получить информацию о погоде.")
+
 
 @dp.message(Command('photo'))
 async def photo(message: Message):
