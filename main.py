@@ -1,11 +1,15 @@
 import asyncio
 from aiogram import Bot, Dispatcher, F
-from aiogram.filters import CommandStart, Command
-from aiogram.types import Message
+from aiogram.filters import Command
+from aiogram.types import Message,FSInputFile
 
-from config import TOKEN,API_KEY
+from config import TOKEN
+from config import API_KEY
+
 import random
 import aiohttp
+
+from gtts import gTTS
 
 # Вставьте сюда ваш API-ключ OpenWeatherMap
 api_key = 'API_KEY'
@@ -47,14 +51,20 @@ async def handle_photo(message: Message):
     list_responses = ['Ого, какая фотка!', 'Непонятно, что это такое', 'Не отправляй мне такое больше']
     rand_answ = random.choice(list_responses)
     await message.answer(rand_answ)
+    await bot.download(message.photo[-1],destination=f"img/{message.photo[-1].file_id}.jpg")
 
 @dp.message(Command('help'))
 async def help(message: Message):
-    await message.answer("Этот бот умеет выполнять команды:\n/start\n/help")
+    await message.answer("Этот бот умеет выполнять команды:\n/start\n/help\n/photo\n/weather")
 
-@dp.message(CommandStart)
-async def start(massage:Message):
-    await massage.answer('Приветики. Я бот!')
+@dp.message(Command('start'))
+async def start(message:Message):
+    await message.answer(f'Приветики. {message.from_user.full_name}')
+
+@dp.message()
+async def echo(message: Message):
+    # Просто отправляем то же сообщение обратно
+    await message.answer(message.text)
 
 async def main():
     await dp.start_polling(bot)
